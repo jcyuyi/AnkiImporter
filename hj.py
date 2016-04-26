@@ -25,7 +25,7 @@ def get_html(word):
         print(e.fp.read())
 
 def get_visible(element):
-    if element.name in ['img']:
+    if element.name in ['img','script']:
         return ""
     if element.name == "b":
         return element.string
@@ -59,7 +59,8 @@ def parse_html(html):
         jp_tone = ""
     jp_tip = ""
     try:
-        jp_tip = word.find_all("div","tip_content_item")[0].string
+        for t in word.find_all("div","tip_content_item"):
+            jp_tip = jp_tip + t.string
     except Exception as e:
         # jp_tip not found
         pass
@@ -68,7 +69,10 @@ def parse_html(html):
     if len(js) == 0:
         js =  word.find_all("span","word_comment")
     for j in js:
-        jp_explain = jp_explain + '\n' + j.string
+        if j.string != None:
+            jp_explain = jp_explain + '\n' + j.string
+    if jp_explain == "":
+        jp_explain = get_examples(j)
     jp_example = ""
     jes = word.find_all("span","ext_sent_ee")
     if len(jes) == 0:
@@ -80,6 +84,19 @@ def parse_html(html):
             es = div[1]
             examples = get_examples(es)
             jp_example = jp_example + '\n' + examples
+    if jp_example == "":
+        jes = word.find_all("span","cmd_sent_ee")
+        if len(jes) > 0:
+            for v in jes:
+                examples = get_examples(v)
+                jp_example = jp_example + '\n' + examples
+    if jp_example == "":
+        jes = word.find_all("li","flag")
+        for li in jes:
+            if len(li) == 2:
+                e = li.find_all("div")[1]
+                examples = get_examples(e)
+                jp_example = jp_example + '\n' + examples
     jp_example = jp_example.strip("\n")
     jp_example = jp_example.replace("\n","<br>")
     jp_explain = jp_explain.strip("\n")
@@ -101,7 +118,5 @@ def get_card(words):
 
 if __name__ == '__main__':
     print("Get html for word: ")
-    print(get_card("聞く"))
-    print(get_card("板"))
-    print(get_card("金持ち"))
-    print(get_card("斜め前"))
+    # print(get_card("だらしない"))
+    print(get_card("生粋"))
